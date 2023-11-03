@@ -1,3 +1,11 @@
+# 自分で用意/実装すべきもの
+
+- ※ログイン画面 by HttpSecurity.formLogin 関数
+- ※ログイン Endpoint(POST /login) by UsernamePasswordAuthenticationFilter
+- **🔴User 情報登録部分** -> PasswordEncoder を使って登録する。
+- **🔴User 情報取得部分** @UserDetailService\<IF\>.loadUserByUsername 関数
+- ※Password 認証 by PasswordEncoder.matches 関数
+
 # 流れで理解する。
 
 1. ログイン画面で Username/Password を入力 -> /POST login で認証 まで既存クラスでいけるかな。
