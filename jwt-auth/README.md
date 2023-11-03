@@ -34,3 +34,148 @@ eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3QifQ.eyJzdWIiOiIxMjM0NTY3ODkwI
    ![](https://storage.googleapis.com/zenn-user-upload/9812c84e4bcf-20231103.png)
    ↓ add "kid" in so that the application can get public key from JWKS.
    ![](https://storage.googleapis.com/zenn-user-upload/5454237b0fba-20231103.png)
+
+## io.jsonwebtoken を使う場合
+
+```xml
+<dependency>
+	<groupId>io.jsonwebtoken</groupId>
+	<artifactId>jjwt-api</artifactId>
+	<version>0.11.2</version>
+</dependency>
+
+<dependency>
+	<groupId>io.jsonwebtoken</groupId>
+	<artifactId>jjwt-impl</artifactId>
+	<version>0.11.2</version>
+	<scope>runtime</scope>
+</dependency>
+
+<dependency>
+	<groupId>io.jsonwebtoken</groupId>
+	<artifactId>jjwt-jackson</artifactId>
+	<version>0.11.2</version>
+	<scope>runtime</scope>
+</dependency>
+```
+
+- `buildAuthentication関数` -> SecurityContext に保存する Authentication 生成
+- `validateToken関数` -> Token が expired してないかチェック。
+
+````java
+package jp.english.hub.englishhubback.domain.jwt;
+
+import java.security.Key;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import jp.english.hub.englishhubback.domain.user.UserInfo;
+
+@Component
+public class JwtTokenProvider implements TokenProvider {
+
+    private Key secretkey;
+
+    @PostConstruct
+    protected void init() {
+        secretkey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    }
+
+    // JWT(文字列) → Authenticationオブジェクトに変換
+    // (UserDetails principal, "", Collection<? extends GrantedAuthority> roles)
+    @Override
+    public Authentication buildAuthentication(String token) {
+        // PrincipalとRolesが欲しい。
+        Jws<Claims> claims = parseClaimsJws(token);
+        UserDetails userDetails = new UserInfo("id", claims.getBody().get("name").toString(),"password",
+                claims.getBody().get("role").toString().split(","));
+
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        for (String role : claims.getBody().get("role").toString().split(",")) {
+            authorities.add(new SimpleGrantedAuthority(role));
+        }
+
+        return new UsernamePasswordAuthenticationToken(userDetails, "", authorities);
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Jws<Claims> claims = parseClaimsJws(token);
+            return !claims.getBody().getExpiration().before(new Date());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // JWT(文字列)よりClaims(BODY部分)を取得
+    private Jws<Claims> parseClaimsJws(String token) {
+        return Jwts.parserBuilder().setSigningKey(secretkey).build().parseClaimsJws(token);
+    }
+
+}
+``
+
+```java
+package jp.english.hub.englishhubback.domain.jwt;
+
+import java.io.IOException;
+
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.GenericFilterBean;
+
+@Component
+public class JwtTokenFilter extends GenericFilterBean {
+
+    @Autowired
+    TokenProvider tokenProvider;
+
+    @Override
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain filterChain)
+            throws IOException, ServletException {
+
+        // リクエストからJWT(文字列)取得
+        HttpServletRequest httpServletRequest = (HttpServletRequest) req;
+        String token = httpServletRequest.getHeader("Authorization");
+
+        if (token != null && tokenProvider.validateToken(token)) {
+            // JWT(文字列) → Authenticationオブジェクト
+            Authentication auth = tokenProvider.buildAuthentication(token);
+            // SecurityContextHolderに保管※毎回入れる必要はないかも？
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        }
+
+        // 後続のフィルターにバトンタッチ
+        filterChain.doFilter(req, res);
+    }
+
+}
+````
