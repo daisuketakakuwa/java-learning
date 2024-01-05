@@ -15,7 +15,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(name = "policy")
-public class PolicyEntity {
+public class PolicyEntity implements java.io.Serializable {
 
     @Id
     @Column(name = "policy_no")

@@ -15,7 +15,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(name = "maintenance_progress")
-public class MaintenanceProgressEntity {
+public class MaintenanceProgressEntity implements java.io.Serializable {
     @Id
     @Column(name = "id")
     private String id;
