@@ -1,4 +1,4 @@
-package dt.learning.policyapi.api.it.controller;
+package dt.learning.policyapi.it.api.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Sql("/db/policy.sql")
 public class PolicyControllerIntegrationTest {
 
     // @AutoConfigureMockMvc で自動セットアップ
@@ -18,7 +19,6 @@ public class PolicyControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Test
-    @Sql("/db/policy.sql")
     public void givenPolicyNo_whenSearchPolicies_thenReturnMatchedOne() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/policies?policyNo=80000001"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -26,7 +26,6 @@ public class PolicyControllerIntegrationTest {
     }
 
     @Test
-    @Sql("/db/policy.sql")
     public void givenNoCondition_whenSearchPolicies_thenReturnAll()
             throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/policies"))
