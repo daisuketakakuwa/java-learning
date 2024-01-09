@@ -13,16 +13,19 @@ import dt.learning.policyapi.api.controller.dto.PolicyDto;
 import dt.learning.policyapi.api.controller.request.PolicySearchRequest;
 import dt.learning.policyapi.api.service.PolicyService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/policies")
 @RequiredArgsConstructor
+@Slf4j
 public class PolicyController {
 
     private final PolicyService policyService;
 
     @GetMapping
     public List<PolicyDto> searchPolicies(PolicySearchRequest request) {
+        log.info("Coming Request: " + request.toString());
         return policyService.searchPolicies(buildConditionMap(request));
     }
 

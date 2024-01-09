@@ -1,6 +1,7 @@
 version: "3.8"
 
 services:
+
   db:
     image: mysql:8.0
     container_name: policy-db
@@ -13,3 +14,43 @@ services:
       - ./docker/db:/tmp/db
     ports:
       - 3309:3306
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.11.1
+    environment:
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - xpack.monitoring.collection.enabled=true
+      - "ES_JAVA_OPTS=-Xms512M -Xmx512M"
+    ports:
+      - "9200:9200"
+    networks:
+     - elasticstack
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.11.1
+    volumes:
+      - ./logstash/config:/usr/share/logstash/config
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "5000:5000"
+    networks:
+     - elasticstack
+    depends_on:
+     - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.11.1
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+     - elasticstack
+    depends_on:
+     - elasticsearch
+
+networks:
+  elasticstack:
+    external: true

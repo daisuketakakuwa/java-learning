@@ -93,12 +93,28 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- アサーションライブラリ -->
+    <!-- アサーションライブラリ
+         ※JUnit5は自分でアサーションライブラリを定義する必要がある。 -->
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
       <version>3.24.2</version>
       <scope>test</scope>
+    </dependency>
+
+    <!-- SpringBoot だと logback.xml をクラスパスに定義するだけで
+         自動で logback-classic が依存として定義される。  -->
+    <!-- <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.2.3</version>
+    </dependency> -->
+
+    <!-- Logstash Logback Encoder -->
+    <dependency>
+      <groupId>net.logstash.logback</groupId>
+      <artifactId>logstash-logback-encoder</artifactId>
+      <version>6.6</version>
     </dependency>
 
   </dependencies>
