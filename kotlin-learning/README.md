@@ -8,6 +8,7 @@ gradlew bootRun
 # 総括(Javaとちがい)
 - new使わない
 - NPE対策（基本Non-nullable）
+- Stream化せずにfilter,mapらへんが使える
 - Immutableという概念がもっと当たり前感
 
 # Grammer
@@ -81,16 +82,89 @@ for ((key, value) in map2) {
 ```
 
 ### コレクション関数
-map, filter, forEach, reduce, any, sorted, 
+map, filter, forEach, reduce, any/all/none, sort系, groupBy, fold
 
-filter
+filter -> 抽出
 ```kt
 var names = mutableListOf("takakuwa", "makito", "ryo")
 var filtered1 = names.filter{ n -> n.contains("o") } // Lambda
 var filtered2 = filtered1.filter{ it.contains("m") } // Lambda with it(暗黙param)
 ```
 
-map
+map -> 変換
+```kt
+var names = mutableMapOf(1 to "takakuwa", 2 to "makito", 3 to "ryo")
+
+// マップの場合は 引数２つで itは使えない。
+var mapped1 = names.map { entry -> entry.key to entry.value.toUpperCase()}
+var mapped2 = mapped1.map { (key,value) -> key to "${value}-san" }
+
+for((key, value) in mapped2) {
+    println("$key = $value")
+}
+```
+
+forEach -> 副作用
+```kt
+var ids = mutableListOf(1,2,3,4,5)
+ids.forEach{ id -> println(id) } // Lambda
+ids.forEach{ println(it) }       // Lambda with it
+```
+
+reduce -> 合計
+```kt
+var ids = mutableListOf(1,2,3,4,5)
+val sum = ids.reduce { acc, number -> acc + number }
+```
+
+any, all, none -> 判定
+```kt
+var ids = mutableListOf(1,2,3,4,5)
+ids.any { it % 2 == 0 }  // true
+ids.all { it % 2 == 0 }  // false
+ids.none { it % 6 == 0 } // true
+```
+
+Mutable　 -> sort, sortBy<br>
+Immutable -> sorted, sortedBy
+
+リストのsort
+```kt
+data class Person(val name: String, val age: Int)
+
+// Mutableなリストのソート sort, sortBy(指定)
+// １．数字
+var mIds = mutableListOf(4,1,2,3,5)
+mIds.sort() // mutableなので元をソート
+println(mIds)
+// ２．インスタンス
+val mPeople = mutableListOf(Person("Alice", 30),Person("Bob", 25),Person("Charlie", 35))
+mPeople.sortBy{ it.age } // mutableなので元をソート Comparableオブジェクト
+println(mPeople)
+
+// Immutableなリストのソート sorted, sortedBy(指定)
+// １．数字
+val imIds = listOf(4,1,2,3,5)
+val sortedIds = imIds.sorted().reversed() // immutableなので新しいものを返す
+println(sortedIds)
+// ２．インスタンス
+val imPeople = listOf(Person("Alice", 30),Person("Bob", 25),Person("Charlie", 35))
+val sortedImPeople = imPeople.sortedBy{ it.age } //  Comparableオブジェクト
+println(sortedImPeople)
+```
+
+Mapのsort
+```kt
+// Mutableなマップのソート 
+val peopleMap = mutableMapOf(3 to "takakuwa", 1 to "akito", 2 to "zhang")
+// １．Keyでソート
+val sortedByKeys = peopleMap.toSortedMap()
+println(sortedByKeys)
+    
+// ２．Sortキーをカスタマイズ toListでimmutableなListにしてから変換
+val sortedByValueDesc = peopleMap.toList().sortedBy { (key, value) -> value}.toMap()
+println(sortedByValueDesc) 
+```
 
 ## レンジ
 
