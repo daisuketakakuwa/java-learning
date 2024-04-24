@@ -300,6 +300,92 @@ fun main() {
 }
 ```
 
+### 関数参照の::
+
+
+### スコープ関数 (レシピ集)
+
+- 【オブジェクト】に対する操作
+- let, run, with, apply, also
+
+#### let (Executing a lambda on **non-nullable** objects)
+
+- **オブジェクトがNULLじゃなかったら---** という使い方をよくする。
+- オブジェクト を別の形に変換/特定の値ののみ抽出 するときにもつかえる👍
+
+#### also
+
+- 引数itを受け取り、thisを返す。
+
+```kt
+// ValidationErrorがあれば、例外をなげる
+data class SearchPolicyRequest(val id: String, val email: String)
+data class ValidationPattern(val regex: String, val errorCode: String)
+
+fun main() {
+  val req = SearchPolicyRequest(id = "1234567890", email = "hoge@gmail.com")
+
+  // 1個でもerrorCodeがListに追加されてたら、例外を投げて終わり。
+  mutableListOf<String>().also {
+    // validate id
+    getErrorCodeIfInvalid("id", req.id)?.let{ errorCode -> it.add(errorCode)}
+    // validate email
+    getErrorCodeIfInvalid("email", req.email)?.let{ errorCode -> it.add(errorCode)}
+  }.throwIfNotEmpty("Validation error")
+
+}
+
+// OK -> null返す　NG -> errorCode返す
+fun getErrorCodeIfInvalid(key: String, value: String): String? {
+  val validationPatternMap = mutableMapOf<String, ValidationPattern>(
+    "id" to ValidationPattern(regex = "[a-zA-Z0-9]{10}", errorCode = "INVALID_ID"),
+    "email" to ValidationPattern(regex = ".+@.+", errorCode = "INVALID_EMAIL"),
+  )
+  val pattern = validationPatternMap.get(key)
+  return if (pattern != null && Regex(pattern.regex).matches(value)) null else pattern?.errorCode
+}
+
+// こうやることで、Collection自体にメソッドを追加することができる👍
+fun Collection<String>.throwIfNotEmpty(message: String) {
+  if (isNotEmpty()) {
+    throw IllegalStateException(message)
+  }
+}
+```
+```kt
+data class SendEmailRequest(val to: MutableList<String>, val cc: MutableList<String>, val bcc: MutableList<String>)
+data class Policy(val policyNo: String, val type: String, val holderName: String)
+
+fun main() {
+  // オブジェクト を別の形に変換するパターン
+  val req = SendEmailRequest(
+    to = mutableListOf("to1", "to2", "to3"),
+    cc = mutableListOf("cc1", "cc2", "cc3"),
+    bcc = mutableListOf("bcc1", "bcc2", "bcc3")
+  )
+
+  val allDestAddresses = req.let{ listOf(it.to, it.cc, it.bcc).flatten() }
+  println(allDestAddresses) // [to1, to2, to3, cc1, cc2, cc3, bcc1, bcc2, bcc3]
+
+  // オブジェクト から特定の値のみ抽出するパターン
+  val policy = Policy("12345", "保険A", "tanaka")
+  val policyNo = policy.let{ p ->
+    println("---- fetch policyInfo $p")
+    p.policyNo
+  }
+  println("PolicyNo is $policyNo")
+}
+```
+
+#### with
+
+#### apply
+
+#### run
+
+
+
+
 ### Unit 関数
 
 ### Nothing 型関数
@@ -316,11 +402,10 @@ fun main() {
 
 ### Null 許容の?
 
-### 関数参照の::
-
-### スコープ関数
 
 ## クラス
+
+### data class
 
 ## オブジェクト
 
