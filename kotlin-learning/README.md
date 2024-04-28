@@ -302,20 +302,70 @@ fun main() {
 
 ### 関数参照の::
 
-
 ### スコープ関数 (レシピ集)
 
 - 【オブジェクト】に対する操作
 - let, run, with, apply, also
+- `String?` のような Nullable なオブジェクトであれば、`safe call(?.)` か `non-null aserted call(!!.)` で関数を呼び出す（**スコープ関数に限った話ではないが 👍**）
 
-#### let (Executing a lambda on **non-nullable** objects)
+#### let (オブジェクトを "INPUT" に副作用的な処理をする)
 
-- **オブジェクトがNULLじゃなかったら---** という使い方をよくする。
-- オブジェクト を別の形に変換/特定の値ののみ抽出 するときにもつかえる👍
+- [公式](https://kotlinlang.org/docs/scope-functions.html#function-selection)には "Executing a lambda on **NON-NULLABLE** objects." とあるが、他のスコープ関数も null ではないオブジェクトに対して実行されるわけだから、今のところこの説明はしっくりこない(´\_ゝ｀)
+- 副作用的な処理としては<br>
+  　 A) オブジェクトより値取得<br>
+  　 B) オブジェクトを別のオブジェクトへ変換する<br>
+  といった　**オブジェクトを「INPUT」として HOGEHOGE する**使い方
+- 引数 it を受け取り、lambda 実行結果を返す。
 
-#### also
+```kt
+data class SendEmailRequest(val to: MutableList<String>, val cc: MutableList<String>, val bcc: MutableList<String>)
+data class Policy(val policyNo: String, val type: String, val holderName: String)
 
-- 引数itを受け取り、thisを返す。
+fun main() {
+  val req = SendEmailRequest(
+    to = mutableListOf("to1", "to2", "to3"),
+    cc = mutableListOf("cc1", "cc2", "cc3"),
+    bcc = mutableListOf("bcc1", "bcc2", "bcc3")
+  )
+
+  // RequestオブジェクトをINPUTに、副作用(新たなオブジェクト生成処理)を実行。
+  val allDestAddresses = req.let{ listOf(it.to, it.cc, it.bcc).flatten() }
+  println(allDestAddresses) // [to1, to2, to3, cc1, cc2, cc3, bcc1, bcc2, bcc3]
+
+  // PolicyオブジェクトをINPUTに、副作用(値抽出)を実行。
+  val policy = Policy("12345", "保険A", "tanaka")
+  val policyNo = policy.let{ p ->
+    println("---- fetch policyInfo $p")
+    p.policyNo
+  }
+  println("PolicyNo is $policyNo")
+}
+```
+
+```kt
+// 例外を取得＆let内でログレベルに応じてログ出力
+
+```
+
+#### also (let の副作用＋戻り値はもとのオブジェクトにしたい場合)
+
+- **ADDITIONAL effects on objects**.
+- **ラムダ内で【元の】オブジェクト自体を変更しながら、その変更後の状態を確認したい場合に適している。**
+- 引数 it を受け取り、this を返す。
+
+```kt
+val numbers = mutableListOf(1, 2, 3, 4, 5).also {
+    println("Original list: $it")
+    it.add(6)
+}
+println("Updated list: $numbers")
+```
+
+#### apply (オブジェクトを生成＆オブジェクトに対する操作/構築 -> this が戻り値)
+
+- Object configuration
+- **Operations on the members of the object👍**
+- 引数 this を受け取り、this を返す。
 
 ```kt
 // ValidationErrorがあれば、例外をなげる
@@ -325,12 +375,12 @@ data class ValidationPattern(val regex: String, val errorCode: String)
 fun main() {
   val req = SearchPolicyRequest(id = "1234567890", email = "hoge@gmail.com")
 
-  // 1個でもerrorCodeがListに追加されてたら、例外を投げて終わり。
-  mutableListOf<String>().also {
-    // validate id
-    getErrorCodeIfInvalid("id", req.id)?.let{ errorCode -> it.add(errorCode)}
-    // validate email
-    getErrorCodeIfInvalid("email", req.email)?.let{ errorCode -> it.add(errorCode)}
+  // Listオブジェクトを構築(Errorがあれば値追加していく)
+  mutableListOf<String>().apply {
+    // String(errorCode)も立派なオブジェクト、あれば副作用(追加処理)を行う。
+    getErrorCodeIfInvalid("id", req.id)?.let{ errorCode -> add(errorCode)}
+    // String(errorCode)も立派なオブジェクト、あれば副作用(追加処理)を行う。
+    getErrorCodeIfInvalid("email", req.email)?.let{ errorCode -> add(errorCode)}
   }.throwIfNotEmpty("Validation error")
 
 }
@@ -352,39 +402,61 @@ fun Collection<String>.throwIfNotEmpty(message: String) {
   }
 }
 ```
+
+#### with（**オブジェクトに組み込まれる拡張関数ではない**）
+
+- "recommend using with for calling functions on the context object **when you don't need to use the returned result."**
+- **run と同じ役割を担うが、with は戻り値を使わないやり方で 👍**
+- 拡張関数ではないので **switch 文的な使い方**
+- 引数 this を受け取り、it を返す。
+
 ```kt
-data class SendEmailRequest(val to: MutableList<String>, val cc: MutableList<String>, val bcc: MutableList<String>)
-data class Policy(val policyNo: String, val type: String, val holderName: String)
+class Person(var name: String, var age: Int)
 
+// NOT recommended using returned result
 fun main() {
-  // オブジェクト を別の形に変換するパターン
-  val req = SendEmailRequest(
-    to = mutableListOf("to1", "to2", "to3"),
-    cc = mutableListOf("cc1", "cc2", "cc3"),
-    bcc = mutableListOf("bcc1", "bcc2", "bcc3")
-  )
+    val person = Person("Alice", 30)
 
-  val allDestAddresses = req.let{ listOf(it.to, it.cc, it.bcc).flatten() }
-  println(allDestAddresses) // [to1, to2, to3, cc1, cc2, cc3, bcc1, bcc2, bcc3]
+    val modifiedPerson = with(person) {
+        name = "Bob"  // nameを変更
+        age += 5      // ageに5を加える
+        this          // 変更後のpersonオブジェクトを返す
+    }
 
-  // オブジェクト から特定の値のみ抽出するパターン
-  val policy = Policy("12345", "保険A", "tanaka")
-  val policyNo = policy.let{ p ->
-    println("---- fetch policyInfo $p")
-    p.policyNo
+    println("Modified Person: ${modifiedPerson.name}, Age: ${modifiedPerson.age}")
+}
+
+// YES not using returned value
+fun main() {
+  val numbers = mutableListOf("one", "two", "three")
+  with(numbers) {
+      println("'with' is called with argument $this")
+      println("It contains $size elements")
   }
-  println("PolicyNo is $policyNo")
 }
 ```
 
-#### with
+#### run（**with の拡張関数バージョン**）
 
-#### apply
+- `run` is useful when your lambda both initializes objects and computes the return value.
+- 以下の流れでよく使う。<br>
+  　 1. オブジェクトを初期化<br>
+  　 2. オブジェクトを INPUT に lambda 実行<br>
+  　 3. 2 の実行結果を戻り値として受け取る。<br>
+  **API コール -> レスポンス取得 のような流れ**
+- 引数 this を受け取り、it を返す。
 
-#### run
+```kt
+fun main() {
+  val service = MultiportService("https://example.kotlinlang.org", 80)
 
+  val result = service.run {
+      port = 8080
+      query(prepareRequest() + " to port $port")
+  }
 
-
+}
+```
 
 ### Unit 関数
 
@@ -402,8 +474,17 @@ fun main() {
 
 ### Null 許容の?
 
-
 ## クラス
+
+### プライマリコンストラクタ
+
+### セカンダリコンストラクタの省略記法
+
+```kt
+data class Person(val name: String? = null, val age: String? = null) {
+    constructor() : this(null, null)
+}
+```
 
 ### data class
 
