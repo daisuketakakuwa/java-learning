@@ -282,9 +282,17 @@ val counts = (1..100).map{ i -> "No. ${i}" }
 counts.forEach{ println(it) }
 ```
 
+<br><br><br>
+
 ## 構文(if, for, forEach, forEachIndexed, while, when, ラベル@)
 
+
+
+<br><br><br>
+
 ## 関数
+
+<br>
 
 ### JS みたいな省略記法
 
@@ -300,13 +308,14 @@ fun main() {
 }
 ```
 
-### 関数参照の::
+<br>
 
-### スコープ関数 (レシピ集)
-
+### スコープ関数
 - 【オブジェクト】に対する操作
 - let, run, with, apply, also
 - `String?` のような Nullable なオブジェクトであれば、`safe call(?.)` か `non-null aserted call(!!.)` で関数を呼び出す（**スコープ関数に限った話ではないが 👍**）
+
+<br>
 
 #### let (オブジェクトを "INPUT" に副作用的な処理をする)
 
@@ -347,7 +356,9 @@ fun main() {
 
 ```
 
-#### also (let の副作用＋戻り値はもとのオブジェクトにしたい場合)
+<br>
+
+#### also (let の副作用＋戻り値はもとのオブジェクトに手を加えたものにしたい場合)
 
 - **ADDITIONAL effects on objects**.
 - **ラムダ内で【元の】オブジェクト自体を変更しながら、その変更後の状態を確認したい場合に適している。**
@@ -360,6 +371,8 @@ val numbers = mutableListOf(1, 2, 3, 4, 5).also {
 }
 println("Updated list: $numbers")
 ```
+
+<br>
 
 #### apply (オブジェクトを生成＆オブジェクトに対する操作/構築 -> this が戻り値)
 
@@ -403,6 +416,8 @@ fun Collection<String>.throwIfNotEmpty(message: String) {
 }
 ```
 
+<br>
+
 #### with（**オブジェクトに組み込まれる拡張関数ではない**）
 
 - "recommend using with for calling functions on the context object **when you don't need to use the returned result."**
@@ -413,10 +428,9 @@ fun Collection<String>.throwIfNotEmpty(message: String) {
 ```kt
 class Person(var name: String, var age: Int)
 
-// NOT recommended using returned result
 fun main() {
     val person = Person("Alice", 30)
-
+    // ✕ NOT recommended using returned result
     val modifiedPerson = with(person) {
         name = "Bob"  // nameを変更
         age += 5      // ageに5を加える
@@ -426,15 +440,17 @@ fun main() {
     println("Modified Person: ${modifiedPerson.name}, Age: ${modifiedPerson.age}")
 }
 
-// YES not using returned value
 fun main() {
   val numbers = mutableListOf("one", "two", "three")
+  // 〇 Recommended using returned value
   with(numbers) {
       println("'with' is called with argument $this")
       println("It contains $size elements")
   }
 }
 ```
+
+<br>
 
 #### run（**with の拡張関数バージョン**）
 
@@ -458,25 +474,181 @@ fun main() {
 }
 ```
 
+<br>
+
+### 無名クラス, 無名関数, Lambda, SAM 変換
+
+#### 無名クラス
+
+- `class`キーワードを使わずにクラス定義されたやつ＝無名クラス
+- 無名クラスは、通常のクラスとは異なり、**定義してすぐその場でインスタンス化**される。
+- 元となる Interface/Class が必要。
+
+＝ Java ＝
+
+```java
+// Bookクラスを元に新たな無名クラス定義＆インスタンス化
+new Book("Design Patterns") {
+    @Override
+    public String description() {
+        return "Famous GoF book.";
+    }
+}
+
+// Interfaceを元に新たな無名クラス(ComparaterIF実装クラス)定義＆インスタンス化
+Comparator<Integer> comparator = new Comparator<Integer>() {
+    @Override
+    public int compare(Integer a, Integer b) {
+        return a.compareTo(b);
+    }
+};
+List<Integer> numbers = new ArrayList<>(Arrays.asList(4, 3, 5));
+numbers.sort(comparator);
+
+// ↓Comparatorオブジェクト を Lambda で表現
+numbers.sort((a, b) -> a.compareTo(b));
+```
+
+＝ Kotlin ＝
+
+```kt
+// 丁寧にクラス定義してあげるパターン
+class IntComparator : Comparator<Int> {
+    override fun compare(a: Int, b: Int): Int {
+        return a.compareTo(b)
+    }
+}
+fun main() {
+    val numbers = listOf(3, 1, 4, 1, 5, 9)
+    numbers.sortedWith(IntComparator()).also { println(it) }
+}
+
+// 無名クラスを定義 ＆ Object構文(object:)でインスタンス化
+fun main() {
+    val comparator = object : Comparator<Int> {
+        override fun compare(a: Int, b: Int): Int {
+            return a.compareTo(b)
+        }
+	}
+    val numbers = listOf(3, 1, 4, 1, 5, 9)
+    numbers.sortedWith(comparator).also { println(it) }
+    // 直接引数内で定義してもOK
+    numbers.sortedWith(object : Comparator<Int> {
+        override fun compare(a: Int, b: Int): Int {
+            return a.compareTo(b)
+        }
+	 }).also{ println(it) }
+}
+
+// SAM変換 by 無名関数
+fun main() {
+    val numbers = listOf(3, 1, 4, 1, 5, 9)
+    numbers.sortedWith(fun(a: Int, b: Int): Int {
+        return a.compareTo(b)
+    }).also { println(it) }
+}
+
+// SAM変換 by Lambda -> ★Lambdaのときは波括弧 { } を使う。
+fun main() {
+    val numbers = listOf(3, 1, 4, 1, 5, 9)
+    numbers.sortedWith{ a, b -> a.compareTo(b) }.also { println(it) }
+}
+```
+
+<br><br>
+
+### Lambda
+- 引数に定義するときは、波括弧`{}`でくくる。
+- Lambda以外の引数もある場合は `()` と `{}` で分ける。
+
+```kt
+private fun introduce(name: String, age: String, doit: (String,String) -> Unit ) {
+    doit(name, age)
+}
+
+
+fun main() {
+    // (通常引数) {Lambda引数}
+	introduce("Takakuwa", "99") { name, age -> println("I'm $name. My age is $age ")}
+}
+```
+
+<br>
+
+### 拡張関数
+- 事前に定義されているクラスに対して、もとのクラス定義をいじることなく関数を追加できる👍
+
+```kt
+fun Collection<String>.throwIfNotEmpty(message: String) {
+  if (isNotEmpty()) {
+    throw IllegalStateException(message)
+  }
+}
+```
+<br>
+
+
+### インライン関数
+- Inline functions in Kotlin work by inlining the function code at the **call site(呼び出し元)**.
+- **コンパイル時に呼び出している関数を呼び出し元に差し込む。**<br>
+  -> 〇パフォーマンス向上 by 関数呼び出しのオーバヘッド の削減<br>
+  -> △ コード量が増える"可能性"がある。
+- 🔴**関数をパラメータとして受け取る関数**について使うべき!!!
+```kt
+inline fun add(x: Int, y: Int): Int {
+    return x + y
+}
+// コンパイル前
+val result = add(3, 4)
+// コンパイル後
+val result = 3 + 4
+```
+```kt
+// 関数がパラメータとして定義されてるもの
+private inline fun processData(value: String, processor: (String) -> String): String {
+  return processor(value)
+}
+
+fun main() {
+    // コンパイル前(インライン化される前)
+    val result = processData("hello") { value -> value.toUpperCase() }
+    // コンパイル後(インライン化された後)
+    val resultAfterInlining = { value: String -> value.toUpperCase() }("hello")
+  
+    println(result)
+}
+```
+
+<br>
+
+
+
+
 ### Unit 関数
+
+<br>
 
 ### Nothing 型関数
 
+<br>
+
 ### 可変引数
 
-### 無名関数 と ラムダ式
+<br>
 
-### インライン関数
 
-### 拡張関数
 
 ### 中間記法関数(infix)
 
-### Null 許容の?
+<br>
 
 ## クラス
 
+<br>
+
 ### プライマリコンストラクタ
+
+<br>
 
 ### セカンダリコンストラクタの省略記法
 
@@ -485,6 +657,8 @@ data class Person(val name: String? = null, val age: String? = null) {
     constructor() : this(null, null)
 }
 ```
+
+<br>
 
 ### data class
 
