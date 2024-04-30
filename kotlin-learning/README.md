@@ -59,9 +59,7 @@ println("$a + $b = ${add(a, b)}")
 
 ## 配列, リスト, セット, マップ, Pair
 
-配列
-
-- **基本リスト使う。**
+### 配列 ※配列あるけど、基本リスト使う
 
 ```kt
 // arrayOf -> 個数が固定の配列を生成してくれる
@@ -79,7 +77,7 @@ var nums2: IntArray = arrayOf(7, 8, 9)
 arrayOf(*nums1, *nums2).forEach{ num -> println(num)}
 ```
 
-リスト
+### リスト
 
 ```kt
 // listOf -> 不変(Immutable)なリスト ※JavaだとList.of
@@ -96,7 +94,7 @@ colors.remove(0)    // 削除
 colors[1] = "White" // 更新
 ```
 
-マップ
+### マップ
 
 ```kt
 // mapOf -> 不変(Immutable)なマップ ※JavaだとMap.of
@@ -113,18 +111,18 @@ for ((key, value) in map2) {
 }
 ```
 
-Pair
+### Pair
 
 ```kt
 
 
 ```
 
-### コレクション関数
+## コレクション関数
 
-map, filter, forEach, reduce, any/all/none, sort 系, flatten/flatMap, groupBy, fold
+map, filter, forEach, reduce/fold, any/all/none, sort 系, flatten/flatMap, groupBy
 
-filter -> 抽出
+### filter -> 抽出
 
 ```kt
 var names = mutableListOf("takakuwa", "makito", "ryo")
@@ -132,7 +130,7 @@ var filtered1 = names.filter{ n -> n.contains("o") } // Lambda
 var filtered2 = filtered1.filter{ it.contains("m") } // Lambda with it(暗黙param)
 ```
 
-map -> 変換
+### map -> 変換
 
 ```kt
 var names = mutableMapOf(1 to "takakuwa", 2 to "makito", 3 to "ryo")
@@ -146,22 +144,46 @@ for((key, value) in mapped2) {
 }
 ```
 
-forEach -> 副作用
+### forEach, forEachIndexed -> 副作用
 
 ```kt
-var ids = mutableListOf(1,2,3,4,5)
-ids.forEach{ id -> println(id) } // Lambda
-ids.forEach{ println(it) }       // Lambda with it
+fun main() {
+  var ids = mutableListOf(1,2,3,4,5)
+  ids.forEach{ id -> println(id) } // Lambda
+  ids.forEach{ println(it) }       // Lambda with it
+}
+
+data class User(val name: String, val age: Int)
+
+fun main() {
+  val names = listOf("taka", "maki", "ryo")
+  names.forEachIndexed{ index, elem -> println("$index: $elem")}
+}
 ```
 
-reduce -> 合計
+### reduce -> 合計 ※初期値なし
 
 ```kt
-var ids = mutableListOf(1,2,3,4,5)
-val sum = ids.reduce { acc, number -> acc + number }
+fun main() {
+  var ids = mutableListOf(1,2,3,4,5)
+  val sum = ids.reduce { acc, number -> acc + number }
+  println(sum)
+}
 ```
 
-any, all, none -> 判定
+### fold -> 合計 ※初期値あり
+
+```kt
+fun main() {
+    var ids = mutableListOf(1,2,3,4,5)
+    // 第1引数: 初期値, 第2引数Lambda -> 波括弧{}でくくること!
+  	val sum = ids.fold(100) { acc, number -> acc + number }
+    println(sum)
+}
+```
+
+
+### any, all, none -> 判定
 
 ```kt
 var ids = mutableListOf(1,2,3,4,5)
@@ -170,10 +192,11 @@ ids.all { it % 2 == 0 }  // false
 ids.none { it % 6 == 0 } // true
 ```
 
-Mutable 　 -> sort, sortBy<br>
-Immutable -> sorted, sortedBy
+### リストの sort
 
-リストの sort
+- Mutable 　 -> sort, sortBy<br>
+- Immutable -> sorted, sortedBy
+
 
 ```kt
 data class Person(val name: String, val age: Int)
@@ -199,7 +222,7 @@ val sortedImPeople = imPeople.sortedBy{ it.age } //  Comparableオブジェク�
 println(sortedImPeople)
 ```
 
-Map の sort
+### Map の sort
 
 ```kt
 // Mutableなマップのソート
@@ -213,7 +236,7 @@ val sortedByValueDesc = peopleMap.toList().sortedBy { (key, value) -> value}.toM
 println(sortedByValueDesc)
 ```
 
-flatten
+### リストのflatten
 
 ```kt
 val days = listOf("MON","TUE","WED","THU","FRI","SAT","SUN")
@@ -225,7 +248,7 @@ allLists.forEach{ println(it) } // [MON,--,SUN] と [Jan,--,Dec] で表示
 allLists.flatten().forEach{ println(it) } // MON,--,SUN,Jan,--,Dec で表示
 ```
 
-flatMap
+### flatMap
 
 - **1 つの入力に対して、N 個の結果が返ってくるような繰り返し処理を行う**場合
 - 複数の検索文字列で API を複数回コール -> 結果を１つのリストにまとめたい場合
@@ -265,9 +288,46 @@ fun main() {
 
 ```
 
-groupBy
+### groupBy - SQLのGROPUBY的な -> 戻り値はMap
 
-fold
+```kt
+data class Policy(val policyNo: String, val type: Int)
+
+fun main() {
+    var policies = listOf(
+    	Policy("10001", 1),
+        Policy("10002", 2),
+        Policy("10003", 1),
+        Policy("10004", 3),
+        Policy("10005", 2),
+        Policy("10006", 3),
+        Policy("10007", 1),
+        Policy("10008", 1),
+    )
+    var groups = policies.groupBy{ it.type }
+    // グループ化の単位がMapのkeyとなる
+    for((key, policies) in groups) {
+        println("type: $key, count: ${policies.size}")
+        policies.forEach{ println("    -> $it") }
+        println("")
+    }
+}
+
+// type: 1, count: 4
+//     -> Policy(policyNo=10001, type=1)
+//     -> Policy(policyNo=10003, type=1)
+//     -> Policy(policyNo=10007, type=1)
+//     -> Policy(policyNo=10008, type=1)
+//
+// type: 2, count: 2
+//     -> Policy(policyNo=10002, type=2)
+//     -> Policy(policyNo=10005, type=2)
+//
+// type: 3, count: 2
+//     -> Policy(policyNo=10004, type=3)
+//     -> Policy(policyNo=10006, type=3)
+```
+
 
 ## レンジ
 
@@ -282,17 +342,59 @@ val counts = (1..100).map{ i -> "No. ${i}" }
 counts.forEach{ println(it) }
 ```
 
-<br><br><br>
+<br>
 
-## 構文(if, for, forEach, forEachIndexed, while, when, ラベル@)
+## 構文(if, for, while, when)
+```kt
+data class User(val name: String, val age: Int)
 
+fun main() {
+    // if文
+    val name = "taka"
+    if (name == "taka") {
+    	println("yes")
+    } else {
+        println("no")
+    }
+    
+    // 三項演算子
+    val result = if (name == "taka") "yes" else "no"
+    println("result is $result")
+    
+    //  for文 - 要素のみ
+    val items = listOf("apple", "banana", "kiwifruit")
+    for (item in items) {
+        println(item)
+    }
+    // for文 - index番号
+    for (index in items.indices) {
+        println("$index: ${items.get(index)}")
+    }
+    
+    // when - switch文的な
+    val targetName = "hoge"
+    val whenResult = when(targetName) {
+        "apple" -> "APPLE"
+        "banana" -> "BANANA"
+        else -> "UNKNOWN"
+    }
+    println(whenResult)
+    
+    // when - switch(true)的なやつ
+    val user = User("taka", 10)
+    val authResult = when {
+        user.name == "unknon" -> "user is Unknown"
+        user.age < 18 -> "user is under 18."
+        else -> "user is valid"
+    }
+    println(authResult)
+}
+```
 
-
-<br><br><br>
-
-## 関数
 
 <br>
+
+## 関数
 
 ### JS みたいな省略記法
 
@@ -558,7 +660,7 @@ fun main() {
 <br><br>
 
 ### Lambda
-- 引数に定義するときは、波括弧`{}`でくくる。
+- 引数にLambdaを定義するときは、波括弧`{}`でくくる。
 - Lambda以外の引数もある場合は `()` と `{}` で分ける。
 
 ```kt
@@ -569,7 +671,28 @@ private fun introduce(name: String, age: String, doit: (String,String) -> Unit )
 
 fun main() {
     // (通常引数) {Lambda引数}
-	introduce("Takakuwa", "99") { name, age -> println("I'm $name. My age is $age ")}
+    introduce("Takakuwa", "99") { name, age -> println("I'm $name. My age is $age ")}
+}
+```
+
+<br>
+
+### 戻り値型が定義されてない関数 -> Unit関数として扱われる
+
+```kt
+fun printMessage(msg: String) {      // : Unit が不要
+    println(msg)
+}
+```
+
+<br>
+
+### 常に例外を返す関数 -> Nothing型関数
+- 戻り値を返すことができないから「Nothing」型
+
+```kt
+fun raiseError(msg: String): Nothing {
+    throw MyException(msg)
 }
 ```
 
@@ -588,7 +711,7 @@ fun Collection<String>.throwIfNotEmpty(message: String) {
 <br>
 
 
-### インライン関数
+### インライン/inline 関数
 - Inline functions in Kotlin work by inlining the function code at the **call site(呼び出し元)**.
 - **コンパイル時に呼び出している関数を呼び出し元に差し込む。**<br>
   -> 〇パフォーマンス向上 by 関数呼び出しのオーバヘッド の削減<br>
@@ -619,26 +742,44 @@ fun main() {
 }
 ```
 
+### クロスライン/crossline 関数
+- inline関数の引数としてのLambdaを「crossline」にするかどうか
+
+```kt
+private inline fun processStrs(strs: List<String>, crossinline processor: (String) -> String): List<String> {
+  val wholeProcessor = {
+    println("--- process started ---")
+    val result = strs.map { processor(it) }
+    println("--- process finished ---")
+    result
+  }
+
+  return wholeProcessor()
+}
+
+fun main() {
+  var names = listOf("taka", "maki", "ryo")
+  var processedNames = processStrs(names) { name: String -> name.toUpperCase() }
+  println(processedNames)
+
+}
+```
+
 <br>
 
+### 可変引数　vararg
 
+```kt
+fun foo(vararg args: String) {
+    args.forEach {
+        println(it)
+    }
+}
 
-
-### Unit 関数
-
-<br>
-
-### Nothing 型関数
-
-<br>
-
-### 可変引数
-
-<br>
-
-
-
-### 中間記法関数(infix)
+fun main() {
+    foo("A", "B", "C")
+}
+```
 
 <br>
 
@@ -662,11 +803,8 @@ data class Person(val name: String? = null, val age: String? = null) {
 
 ### data class
 
-## オブジェクト
-
 ### companion object？
 
-## Stream
 
 # 勉強フロー
 
@@ -679,17 +817,6 @@ data class Person(val name: String? = null, val age: String? = null) {
 - JWT 認証をつくる
 - セッションを作る
 - ModelMapper で DTO ⇔ Entity の変換を行う。
-
-## Java からあるもの
-
-- クラスの書き方(コンストラクタ,フィールド,メソッド)
-- Stream 構文(map, filter) と ラムダ構文
-- if 文
-- for 文
-
-## Kotlin からあるもの
-
--
 
 ## Gradle
 
