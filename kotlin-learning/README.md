@@ -110,6 +110,8 @@ arrayOf(*nums1, *nums2).forEach{ num -> println(num)}
 ```
 
 ### リスト
+- mutableListOfでもarrayListOfでも動作あまり変わらない。
+- 
 
 ```kt
 // listOf -> 不変(Immutable)なリスト ※JavaだとList.of
@@ -814,20 +816,20 @@ fun main() {
 
 ## クラス
 - var/valをインスタンス変数につけることで、getter/setterが自動生成される。<br>
-　→ **var/valをつけないなら**
-- プライマリコンストラクタで、「インスタンス変数定義」「変数の初期化」をしてくれる。
-- 自分でgetter/setterを定義したい場合は、**プライマリコンストラクタは使わずインスタンス変数を定義する**。
+　→ **var/valをつけないなら、自分でgetter/setterを定義してあげる必要があるってこと👍**
+- プライマリコンストラクタで`val/var`**をつけると「インスタンス変数定義」「変数の初期化」をしてくれる**。
+- 自分でインスタンス変数定義＆getter/setterを定義したい場合は、**プライマリコンストラクタは使わないこと**。
+- ✅**プライマリコンストラクタ × `val` = インスタンス変数自動定義＆getter/setter自動生成**
 
 ```kt
 // 1. 引数にvar/val定義なし
 class Person (name: String, age: Int)
 // ↓ と同義(コンパイル時に変換)
 class Person {
-  name: String
-  age: Int
+  // インスタンス変数は定義されない
+  // コンストラクタは生成される
   constructor(name: String, age: Int) {
-    this.name = name
-    this.age = age
+    // インスタンス変数が定義されていないので何もおきない
   }
   // getter/setterが生成されない
 }
@@ -857,6 +859,7 @@ class Person {
 //    - プライマリコンストラクタは使わない
 //      -> 自分で「変数定義」と「getter/setter」を手動定義したいから！
 class Person {
+    // 自分でインスタンス変数の初期値,getter,setterを定義する👍
     var name: String = "default"
     	get() = field.toUpperCase()
     	set(value) { field = value.toUpperCase() }
@@ -869,11 +872,62 @@ class Person {
 }
 ```
 
+### セカンダリコンストラクタの省略記法
 
-### Companion objects（インスタンス化せずに呼べる）
-- ****
+```kt
+data class Person(val name: String? = null, val age: String? = null) {
+    constructor() : this(null, null)
+}
+```
+
+## 継承
+- 継承させるには`open`キーワードが必要。
+- クラス, 関数に加えてインスタンス変数 もoverride可能👍
+- **抽象クラス/interfaceに含まれるメソッドやプロパティは暗黙的にopen**なので、`open`キーワード付与はしなくていい -> 拡張前提だもんね。
+
+```kt
+open class BaseApiRequest(
+	val url: String,
+    val method: String,
+    val token: String,
+)
+
+// url, method, tokenは親クラスでインスタンス変数として定義済＆継承するので、valはつけない。
+class PolicyApiRequest(
+   	url: String,
+    method: String,
+    token: String,
+    val policyNo: String,
+    val policyHolder: String
+): BaseApiRequest(url, method, token) {
+    override fun toString(): String{
+        return "url: $url\nmethod: $method\ntoken: $token\npolicyNo: $policyNo\npolicyHolder: $policyHolder"
+    }
+}
+
+
+fun main() {   
+	val policyApiReq = PolicyApiRequest(
+    	url = "https://policy-api/policies",
+        method = "GET",
+        token = "AFJIDOJOIAJIDSA",
+        policyNo = "90000001",
+        policyHolder = "aaaaaa.bbbbbbb"
+    )
+    println(policyApiReq)
+}
+```
+
+## Interface
+- `open`キーワード不要(interfaceは暗黙的に`open`)
+- 変数の枠のみ定義できる（初期化はできない）
+- メソッドの中身を入れられる。
+
+<br>
+
+
+## Companion objects（インスタンス化せずに呼べる）
 - **Factoryメソッドにてよく使われるパターン**
-- クラス以外でも使うよ！！！！！
 
 ```kt
 // private -> 外からインスタンス化できない。
@@ -891,30 +945,6 @@ fun main() {
     println(p1)
 }
 ```
-
-### 継承
-- クラス,メソッド,フィールドを、子クラスにて継承(拡張)可能とさせるために`open`キーワードが必要。
-- **抽象クラス/interfaceに含まれるメソッドやプロパティは暗黙的にopen** -> 拡張前提だもんね。
-
-
-### 実装
-
-<br>
-
-
-
-<br>
-
-### セカンダリコンストラクタの省略記法
-
-```kt
-data class Person(val name: String? = null, val age: String? = null) {
-    constructor() : this(null, null)
-}
-```
-
-<br>
-
 
 ## Enum
 
