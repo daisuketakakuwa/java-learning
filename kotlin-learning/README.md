@@ -152,6 +152,14 @@ for ((key, value) in map2) {
 
 ```
 
+### Triple
+
+```kt
+
+
+```
+
+
 ## コレクション関数
 
 map, filter, forEach, reduce/fold, any/all/none, sort 系, flatten/flatMap, groupBy
@@ -919,14 +927,59 @@ fun main() {
 ```
 
 ## Interface
-- `open`キーワード不要(interfaceは暗黙的に`open`)
-- 変数の枠のみ定義できる（初期化はできない）
-- メソッドの中身を入れられる。
+- IFは「型」なので、インスタンス生成はできない。
+- 🔴しかし、IF内にNestされた`enum`や`data class`は`IF.Xxxx`で参照可能であり、このIFに関連するものはNestする形で色々定義していくのが主流っぽい...
+- ✅なので、コード読むときは「**型の役割を果たしているもの**」を中心に見るとよい👍
+- IF = 「型」であり、IF実装クラス(インスタンス)が「状態」をもつ【**IFは状態をもたない**】
+- "Interface cannot store states"
+- Interface can contains declarations of<br>
+  ・abstract properties<br>
+  ・properties with accessor
+  ・abstract methods<br>
+  ・method implementations（振る舞いだけだから状態をもたない）<br>
+  ※class<br>
+  ※data class<br>
+  ※enum<br>
+
+```kt
+interface HogeInterface {
+    // IF内にあってもアプリ起動時にSingletonインスタンス生成される
+    enum class FileType {
+        JPEG
+    }
+    // IF内にNestして定義してるだけ。
+    data class Person(val name: String, val age: Int)
+}
+```
 
 <br>
 
+## Operator overloading
+- インスタンスA + インスタンスB のような演算を可能にする👍
+```kt
+data class Point(val point: Int) {
+    // 関数名は 演算子ごとに調べる
+    operator fun plus(other: Point): Point {
+        return Point(this.point + other.point)
+    }
+}
 
-## Companion objects（インスタンス化せずに呼べる）
+fun main() {
+	val p1 = Point(1)
+    val p2 = Point(2)
+    
+    val p3 = p1 + p2
+    println(p3)
+}
+```
+
+https://kotlinlang.org/docs/operator-overloading.html
+
+https://qiita.com/KokiEnomoto/items/2fedf864ff0710927b98
+
+https://www.tohoho-web.com/ex/kotlin.html#operator
+
+## Companion object（インスタンス化せずに呼べる）
 - **Factoryメソッドにてよく使われるパターン**
 
 ```kt
@@ -945,6 +998,9 @@ fun main() {
     println(p1)
 }
 ```
+
+## invoke operator
+
 
 ## Enum
 
@@ -1049,9 +1105,13 @@ fun main() {
 ```
 
 
+
 ## data class
 
 
+
+## 便利な標準組み込み関数
+- takeIf
 
 # 勉強フロー
 
