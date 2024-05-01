@@ -27,6 +27,44 @@ fun hoge() {}
 
 # Grammer
 
+## Null対策
+- safe call(`?.`)
+- `!!` operator
+- Elvis operator(`?:`)
+
+### Safe call
+- Nullだったら`?.xxx`の`xxx`部分のフィールド参照/関数実行はせずにnullを返す。
+- 名前の通り**Nullだったら参照せずにNullを返すだけ**なので、ヌルポが発生しない👍
+
+```kt
+fun main() {
+    val nullableName: String? = null
+    val result = nullableName?.length
+    println(result) //  null
+}
+```
+
+### !! operator
+- 「Nullかも判定されてるけど、Nullじゃないから絶対`xxx`部分を参照してね！！！」という指示。
+- なので`!!`**をつけて**`xxx`**がNullだったらヌルポ発生して終わる。**
+
+```kt
+fun main() {
+    val nullableName: String? = null
+    val result = nullableName!!.length // NullPointerException
+    println(result)
+}
+```
+
+### エルビス演算子(?:) - A || B みたいなことができる👍
+```kt
+fun main() {
+    val nullableName: String? = null
+    val result = nullableName ?: "unknown"
+    println(result) // unknown
+}
+```
+
 ## 変数
 
 ### var, val, const
@@ -43,13 +81,6 @@ fun hoge() {}
 ```kt
 val number: Int = 100 // ok
 val number2 = 123 // Int型として推論される
-```
-
-### 基本 null が入ると NG、Nullable な変数は「?」をつけること
-
-```kt
-val name: String = null  // Compile Error
-val name: String? = null // OK
 ```
 
 ### テンプレートリテラル
@@ -391,9 +422,6 @@ fun main() {
     println(authResult)
 }
 ```
-
-
-<br>
 
 ## 関数
 
@@ -842,60 +870,8 @@ class Person {
 ```
 
 
-
-
-### プライマリコンストラクタ
-
-```kt
-class Person(val name: String, val age: Int)
-```
-は以下に変換される。要は【フィールド定義】【初期化用コンストラクタ自動生成】をやってくれる。
-```kt
-class Person {
-    val name: String // × デフォpublicなので直接参照できちゃう
-    val age: Int　　　// × デフォpublicなので直接参照できちゃう
-
-    // プライマリコンストラクタが自動的に生成され、nameとageを初期化する
-    constructor(name: String, age: Int) {
-        this.name = name
-        this.age = age
-    }
-}
-```
-カプセル化するなら、変数をprivateにして更新可能(`var`)とする。※`val`だと更新不可<br>
-**getとsetは`fun`キーワードが不要。**
-```kt
-class Person(private var name: String, private var age: Int) {
-
-  var nameField: String
-    get() = name
-    set(value) { name = value }
-
-  var ageField: Int
-    get() = age
-    set(value) {
-      if (value >= 0) {
-        age = value
-      }
-    }
-}
-
-fun main() {
-  val p1 = Person("taka", 10)
-  p1.nameField = "makki"
-
-  println("name: ${p1.nameField}  age is ${p1.ageField}")
-}
-
-```
-コンストラクタをprivateにしたい場合は
-```kt
-
-```
-
-### operator (setter/getter)
-
 ### Companion objects（インスタンス化せずに呼べる）
+- ****
 - **Factoryメソッドにてよく使われるパターン**
 - クラス以外でも使うよ！！！！！
 
