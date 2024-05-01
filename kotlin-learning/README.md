@@ -9,6 +9,7 @@ gradlew bootRun
 # 総括(Java とちがい)
 
 - new 使わない
+- `public/private`に加えて `val/var` 
 - NPE 対策（基本 Non-nullable）
 - Stream 化せずに filter,map らへんが使える
 - Immutable という概念がもっと当たり前感
@@ -784,10 +785,147 @@ fun main() {
 <br>
 
 ## クラス
+- var/valをインスタンス変数につけることで、getter/setterが自動生成される。<br>
+　→ **var/valをつけないなら**
+- プライマリコンストラクタで、「インスタンス変数定義」「変数の初期化」をしてくれる。
+- 自分でgetter/setterを定義したい場合は、**プライマリコンストラクタは使わずインスタンス変数を定義する**。
+
+```kt
+// 1. 引数にvar/val定義なし
+class Person (name: String, age: Int)
+// ↓ と同義(コンパイル時に変換)
+class Person {
+  name: String
+  age: Int
+  constructor(name: String, age: Int) {
+    this.name = name
+    this.age = age
+  }
+  // getter/setterが生成されない
+}
+```
+```kt
+// 2. 引数にvar定義あり ※valだとgetterのみ生成
+class Person (var name: String, var age: Int)
+// ↓ と同義(コンパイル時に変換)
+class Person {
+    // varなのでgetter/setter自動生成
+    var name: String = ""
+        get() = field
+        set(value) { field = value }
+    // varなのでgetter/setter自動生成
+    var age: Int = 0
+        get() = field
+        set(value) { field = value }
+    // プライマリコンストラクタで自動生成
+    constructor(name: String, age: Int) {
+        this.name = name
+        this.age = age
+    }
+}
+```
+```kt
+// 3. customでgetter/setter定義したい場合、
+//    - プライマリコンストラクタは使わない
+//      -> 自分で「変数定義」と「getter/setter」を手動定義したいから！
+class Person {
+    var name: String = "default"
+    	get() = field.toUpperCase()
+    	set(value) { field = value.toUpperCase() }
+    var age: Int
+    
+    constructor(name: String, age: Int) {
+        this.name = name
+        this.age = age
+    }
+}
+```
+
+
+
+
+### プライマリコンストラクタ
+
+```kt
+class Person(val name: String, val age: Int)
+```
+は以下に変換される。要は【フィールド定義】【初期化用コンストラクタ自動生成】をやってくれる。
+```kt
+class Person {
+    val name: String // × デフォpublicなので直接参照できちゃう
+    val age: Int　　　// × デフォpublicなので直接参照できちゃう
+
+    // プライマリコンストラクタが自動的に生成され、nameとageを初期化する
+    constructor(name: String, age: Int) {
+        this.name = name
+        this.age = age
+    }
+}
+```
+カプセル化するなら、変数をprivateにして更新可能(`var`)とする。※`val`だと更新不可<br>
+**getとsetは`fun`キーワードが不要。**
+```kt
+class Person(private var name: String, private var age: Int) {
+
+  var nameField: String
+    get() = name
+    set(value) { name = value }
+
+  var ageField: Int
+    get() = age
+    set(value) {
+      if (value >= 0) {
+        age = value
+      }
+    }
+}
+
+fun main() {
+  val p1 = Person("taka", 10)
+  p1.nameField = "makki"
+
+  println("name: ${p1.nameField}  age is ${p1.ageField}")
+}
+
+```
+コンストラクタをprivateにしたい場合は
+```kt
+
+```
+
+### operator (setter/getter)
+
+### Companion objects（インスタンス化せずに呼べる）
+- **Factoryメソッドにてよく使われるパターン**
+- クラス以外でも使うよ！！！！！
+
+```kt
+// private -> 外からインスタンス化できない。
+class Person private constructor(name: String, age: Int) {
+    companion object {
+        // Person.create(xxx)で インスタンス生成してもらう
+        fun create(name: String, age: Int): Person {
+            return Person(name, age)
+        }
+    }
+}
+
+fun main() {
+    val p1 = Person.create("taka", 1)
+    println(p1)
+}
+```
+
+### 継承
+- クラス,メソッド,フィールドを、子クラスにて継承(拡張)可能とさせるために`open`キーワードが必要。
+- **抽象クラス/interfaceに含まれるメソッドやプロパティは暗黙的にopen** -> 拡張前提だもんね。
+
+
+### 実装
 
 <br>
 
-### プライマリコンストラクタ
+
 
 <br>
 
@@ -801,9 +939,112 @@ data class Person(val name: String? = null, val age: String? = null) {
 
 <br>
 
-### data class
 
-### companion object？
+## Enum
+
+- アプリ起動時にSingletonインスタンスとして初期化される
+- コンストラクタ引数だけで完結できるパターンもあるし、IF用意するもよし↓
+
+```kt
+// パターン1. コンストラクタ引数定義 ＆ 直接プロパティを参照
+enum class FileType1(val contentType: String, val extension: String) {
+    JPEG(contentType = "image/jpeg", extension = ".jpg"),
+    PNG(contentType = "image/png", extension = ".png"),
+    PDF(contentType = "application/pdf", extension = ".pdf")
+}
+fun main() {
+    println(FileType1.JPEG) // JPEG
+	println(FileType1.JPEG.contentType) // image/jpeg
+}
+
+
+// パターン2. IFを定義 ＆ 各enumで実装 & メソッド実行
+enum class FileType2 {
+    JPEG {
+        override fun contentType() = "image/jpeg"
+        override fun extension() = ".jpg"
+    },
+    PNG {
+        override fun contentType() = "image/png"
+        override fun extension() = ".png"
+    },
+    PDF {
+        override fun contentType() = "application/pdf"
+        override fun extension() = ".pdf"
+    };
+
+    abstract fun contentType(): String
+    abstract fun extension(): String
+}
+
+// パターン2がメソッドなので、後から拡張しやすいくらい？
+```
+
+- companion objectを用いて、該当するenumがあれば返すようなfactory用メソッドを用意する👍
+
+```kt
+enum class FileType(val contentType: String, val extension: String) {
+    JPEG(contentType = "image/jpeg", extension = ".jpg"),
+    PNG(contentType = "image/png", extension = ".png"),
+    PDF(contentType = "application/pdf", extension = ".pdf");
+    
+    companion object {
+        // factoryメソッド
+        fun findFileType(targetType: String): FileType? =
+            when(targetType) {
+                "JPEG" -> JPEG
+                "PNG"  -> PNG
+                "PDF"  -> PDF
+                else   -> null
+            }
+    }
+}
+
+fun main() {   
+    val targetFileType = FileType.findFileType("JPEG")
+    println(targetFileType)
+}
+```
+
+## object
+
+- Loggerのような`public static`/Singletonインスタンスで定義したい処理や定数を objectで定義する。
+- アプリ起動時ではなく、参照されたら遅延初期化でインスタンス生成される。
+
+```kt
+class MockLogger {
+    fun debug(message: String) = println(message)
+    fun warn(message: String) = println(message)
+    fun info(message: String) = println(message)
+    fun error(message: String) = println(message)
+}
+
+// 参照されたら遅延初期化でSingletonインスタンス生成
+object Logger {
+	private val logger = MockLogger() // 本当ならlog4j等で初期化
+    
+    fun debug(message: String) {
+        logger.debug("DEBUG: $message")
+    }
+    fun warn(message: String) {
+        logger.warn("WARN: $message")
+    }
+    fun info(message: String) {
+        logger.info("INFO: $message")
+    }
+    fun error(message: String) {
+        logger.error("ERROR: $message")
+    }
+}
+
+fun main() {   
+	Logger.debug("application started.")
+}
+```
+
+
+## data class
+
 
 
 # 勉強フロー
