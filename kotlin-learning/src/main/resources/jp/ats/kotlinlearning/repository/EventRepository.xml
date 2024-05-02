@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="jp.ats.kotlinlearning.repository.EventRepository">
+
+    <!-- 戻り値のオブジェクトに対するマッピング処理が複雑になる場合は、resultMapを使って定義する -->
+    <resultMap id="eventWithParticipantsResultMap" type="jp.ats.kotlinlearning.model.EventWithParticipants">
+        <!-- column: DB/SQLの方　property: Javaクラスの方 -->
+        <id column="id" property="id" />
+        <result column="eventName" property="eventName" />
+        <result column="startsAt" property="startsAt" />
+        <result column="endsAt" property="endsAt" />
+        <!-- 1対1 のEntityに対しては association -->
+        <!-- associationの型は javaTypeで指定 -->
+        <association property="organizer" javaType="jp.ats.kotlinlearning.model.Organizer">
+            <id column="organizationId" property="id" />
+            <result column="organizationName" property="organizationName" />
+        </association>
+        <!-- 1対多 のEntityに対しては collection -->
+        <!-- resultMapはtype属性、collectionはofType属性 -->
+        <!-- collection.notNullColumnで指定した値がない場合、オブジェクトの追加を防ぐ -->
+        <collection property="participants"
+                    ofType="jp.ats.kotlinlearning.model.Participant"
+                    notNullColumn="participantId">
+            <id column="participantId" property="id" />
+            <result column="participantFirstName" property="firstName" />
+            <result column="participantLastName" property="lastName" />
+            <result column="participantGender" property="gender" />
+        </collection>
+    </resultMap>
+
+
+
+    <select id="findEvents" resultType="jp.ats.kotlinlearning.model.Event" >
+        SELECT * FROM event
+    </select>
+
+    <select id="findEventById" parameterType="int" resultType="jp.ats.kotlinlearning.model.Event" >
+        SELECT * FROM event WHERE id = ${id}
+    </select>
+
+    <!-- Organizer + Participant 込みで取得してみる  -->
+    <select id="findEventsWithOrganizerAndParticipants" parameterType="int" resultMap="eventWithParticipantsResultMap">
+        SELECT
+            e.id AS id,
+            e.event_name AS eventName,
+            e.starts_at AS startsAt,
+            e.ends_at AS endsAt,
+            o.id AS organizationId,
+            o.organization_name AS organizationName,
+            p.id AS participantId,
+            p.first_name AS participantFirstName,
+            p.last_name AS participantLastName,
+            p.gender AS participantGender
+        FROM event e
+        LEFT JOIN organizer o
+        ON e.organizer_id = o.id
+        LEFT JOIN rel_event_participant rep
+        ON e.id = rep.event_id
+        LEFT JOIN participant p
+        ON rep.participant_id = p.id
+        WHERE e.id = #{id}
+    </select>
+
+
+</mapper>

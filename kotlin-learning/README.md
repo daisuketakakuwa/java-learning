@@ -12,7 +12,52 @@ psql -p 5435 -U postgres -d kotlinDb
 gradlew bootRun
 ```
 
-# 総括(Java とちがい)
+# MyBatis
+- [MyBatis-Spring-Boot-Starter](https://mybatis.org/spring-boot-starter/mybatis-spring-boot-autoconfigure/)を利用する。
+- `DataSource`,`SqlSessionFactory`周りのboilertemplateを書かずに済む！
+- 用意するのは Mapper(XML), Mapper(Java/IF) の２つ
+- Mapper(XML)は `src/main/resouces`配下に定義する。
+- 通常なら`mybatis-config.xml`にて、MapperXMLの場所を１つ１つ定義する必要があるが、mybatis-spring-boot-starterを使えば`@MapperScan`で**MapperXMLが配置されているクラスパス**(**src/main/resouces/XXX**)を指定してスキャンすればOK👍
+- 🔴XMLファイルでの実装 と 🔵アノテーションでの実装 の２つある。
+
+### MapperXMLを自動スキャン
+
+MapperIFをDIコンテナに登録する by `@MapperScan`<br>
+→ ✅**MyBatisが自動的にIFの実装を提供してくれる。**
+```kt
+@MapperScan("jp.ats.kotlinlearning.repository")
+@SpringBootApplication
+class KotlinLearningApplication
+```
+
+### マッピングするクラスは空コンストラクタを用意すること -> [参考](https://qiita.com/5zm/items/0864d6641c65f976d415#17-%E3%83%9E%E3%83%83%E3%83%94%E3%83%B3%E3%82%B0%E3%81%99%E3%82%8B%E3%82%AF%E3%83%A9%E3%82%B9%E3%81%AB%E3%81%AF%E7%A9%BA%E3%81%AE%E3%82%B3%E3%83%B3%E3%82%B9%E3%83%88%E3%83%A9%E3%82%AF%E3%82%BF%E3%81%8C%E5%AD%98%E5%9C%A8%E3%81%99%E3%82%8B%E3%81%93%E3%81%A8)
+```kt
+data class EventWithParticipants(
+    val id: Long, // BigSerialだからLong
+    val eventName: String,
+    val startsAt: LocalDateTime?,
+    val endsAt: LocalDateTime?,
+    val organizer: Organizer?,
+    val participants: List<Participant>
+) {
+    // MyBatisは空のコンストラクタを利用してインスタンス生成するので定義必須
+    constructor() : this(
+        1L,
+        "",
+        null,null,null,
+        // mutableなListでないとエラーとなる
+        mutableListOf()
+    )
+}
+```
+
+# DbSetup
+https://dbsetup.ninja-squad.com/approach.html
+
+
+# Grammer of Kotlin
+
+## 総括(Java とちがい)
 
 - new 使わない
 - `public/private`に加えて `val/var` 
@@ -30,7 +75,7 @@ fun hoge() {}
 ```
 
 
-# Grammer
+
 
 ## Null対策
 - safe call(`?.`)
