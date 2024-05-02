@@ -3,6 +3,12 @@
 ## How to run on local
 
 ```
+// DB起動
+docker compose up -d
+// ログイン
+psql -p 5435 -U postgres -d kotlinDb
+
+// アプリ起動
 gradlew bootRun
 ```
 
@@ -23,7 +29,6 @@ fun hello() {}
 fun hoge() {}
 ```
 
-- Pair という新しい概念
 
 # Grammer
 
