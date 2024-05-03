@@ -1,17 +1,26 @@
+DELETE FROM rel_event_participant;
+DELETE FROM participant;
+DELETE FROM event;
+DELETE FROM organizer;
+
+ALTER SEQUENCE organizer_id_seq RESTART WITH 1;
+ALTER SEQUENCE event_id_seq RESTART WITH 1;
+ALTER SEQUENCE participant_id_seq RESTART WITH 1;
+
 -- organizer
 INSERT INTO organizer (organization_name) VALUES
-    ('ÁµÑÁπî1'),('ÁµÑÁπî2'),('ÁµÑÁπî3'),('ÁµÑÁπî4'),('ÁµÑÁπî5');
+    ('ëgêD1'),('ëgêD2'),('ëgêD3'),('ëgêD4'),('ëgêD5');
 
 -- event
 INSERT INTO event (organizer_id, event_name, starts_at, ends_at) VALUES
-	(1, '„Ç§„Éô„É≥„Éà1', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
-	(1, '„Ç§„Éô„É≥„Éà2', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
-	(2, '„Ç§„Éô„É≥„Éà3', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
-	(2, '„Ç§„Éô„É≥„Éà4', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
-	(3, '„Ç§„Éô„É≥„Éà5', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
-	(3, '„Ç§„Éô„É≥„Éà6', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
-	(4, '„Ç§„Éô„É≥„Éà7', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
-	(5, '„Ç§„Éô„É≥„Éà8', '2024-05-02 10:30:00', '2024-05-02 12:30:00');
+	(1, 'ÉCÉxÉìÉg1', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
+	(1, 'ÉCÉxÉìÉg2', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
+	(2, 'ÉCÉxÉìÉg3', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
+	(2, 'ÉCÉxÉìÉg4', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
+	(3, 'ÉCÉxÉìÉg5', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
+	(3, 'ÉCÉxÉìÉg6', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
+	(4, 'ÉCÉxÉìÉg7', '2024-05-02 10:30:00', '2024-05-02 12:30:00'),
+	(5, 'ÉCÉxÉìÉg8', '2024-05-02 10:30:00', '2024-05-02 12:30:00');
 
 -- participant
 INSERT INTO participant(first_name, last_name, gender) VALUES
@@ -20,7 +29,7 @@ INSERT INTO participant(first_name, last_name, gender) VALUES
 	('Kevin','Durant', 'M'),
 	('Giannis','Antetokounmpo', 'M'),
 	('Kawhi','Leonard', 'M'),
-	('Luka','Donƒçiƒá', 'M'),
+	('Luka','Don?i?', 'M'),
 	('Diana','Taurasi', 'F'),
 	('Sue','Bird', 'F'),
 	('Breanna','Stewart', 'F'),
@@ -48,7 +57,7 @@ INSERT INTO rel_event_participant VALUES
     (3, 5),
     (4, 5),
     (5, 5),
-    -- Donƒçiƒá
+    -- Don?i?
     (2, 6),
     (3, 6),
     (4, 6),
@@ -68,3 +77,4 @@ INSERT INTO rel_event_participant VALUES
     (1, 10),
     (5, 10),
     (6, 10);
+

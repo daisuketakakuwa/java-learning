@@ -3,13 +3,14 @@
 ## How to run on local
 
 ```
-// DB起動
+// 1. DB起動
 docker compose up -d
-// ログイン
+// ※DBログイン
 psql -p 5435 -U postgres -d kotlinDb
-
-// アプリ起動
+// 2. アプリ起動（FlywayでDB定義マイグレーション）
 gradlew bootRun
+// 3. テストデータ投入
+psql -p 5435 -U postgres -d kotlinDb -f ./local/import-data.sql
 ```
 
 # MyBatis
