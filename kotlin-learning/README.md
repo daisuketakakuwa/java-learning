@@ -52,6 +52,29 @@ data class EventWithParticipants(
 }
 ```
 
+### TypeHandler
+- Java型 ⇔ DB型　のマッピング/変換処理を担う。
+- 基本の型については、ライブラリ側で標準TypeHandlerが用意されている👍
+- PostgreSQLの`jsonb`のようなDB型 ⇔ Javaクラス のマッピングをしたい場合、カスタムTypeHandlerを作成してあげる必要がある。
+
+### カスタムTypeHandlerの作成方法
+- [参考doc](https://mybatis.org/mybatis-3/ja/configuration.html#typeHandlers)
+- BaseTypeHandlerクラスのサブクラスを作成する。
+- 複数のクラスを扱う汎用的なTypeHandlerを作成する場合、**引数にClassを受け取るコンストラクタを定義**しておくと、MyBatisがインスタンス生成時に実際のクラスを渡してくれる。
+```kt
+@MappedJdbcTypes(JdbcType.JAVA_OBJECT)
+class JSONBTypeHandler<E>(
+    private val type: Class<E>
+): BaseTypeHandler<E>
+```
+```xml
+// javaType -> Javaクラス指定、typeHandler -> カスタムTypeHandler指定
+<result column="eventDetails" property="eventDetails"
+        javaType="jp.ats.kotlinlearning.model.EventDetails"
+        typeHandler="jp.ats.kotlinlearning.repository.JSONBTypeHandler" />
+```
+
+
 # DbSetup
 https://dbsetup.ninja-squad.com/approach.html
 

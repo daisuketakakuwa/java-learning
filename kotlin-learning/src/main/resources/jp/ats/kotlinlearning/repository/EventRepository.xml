@@ -12,6 +12,8 @@
         <result column="eventName" property="eventName" />
         <result column="startsAt" property="startsAt" />
         <result column="endsAt" property="endsAt" />
+        <result column="eventDetails" property="eventDetails"
+                javaType="jp.ats.kotlinlearning.model.EventDetails" typeHandler="jp.ats.kotlinlearning.repository.JSONBTypeHandler" />
         <!-- 1対1 のEntityに対しては association -->
         <!-- associationの型は javaTypeで指定 -->
         <association property="organizer" javaType="jp.ats.kotlinlearning.model.Organizer">
@@ -48,6 +50,7 @@
             e.event_name AS eventName,
             e.starts_at AS startsAt,
             e.ends_at AS endsAt,
+            e.event_details AS eventDetails,
             o.id AS organizationId,
             o.organization_name AS organizationName,
             p.id AS participantId,

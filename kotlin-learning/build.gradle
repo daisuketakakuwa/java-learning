@@ -32,6 +32,8 @@ dependencies {
 	implementation group: 'org.mybatis.spring.boot', name: 'mybatis-spring-boot-starter', version: '3.0.3'
 	// others
 	implementation 'org.jetbrains.kotlin:kotlin-reflect'
+	implementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: '2.17.0'
+
 	// test-related
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation group: 'com.ninja-squad', name: 'DbSetup-kotlin', version: '2.1.0'

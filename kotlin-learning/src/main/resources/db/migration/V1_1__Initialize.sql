@@ -10,7 +10,8 @@ CREATE TABLE event (
     organizer_id INTEGER REFERENCES organizer(id),
     event_name VARCHAR(300),
     starts_at TIMESTAMP,
-    ends_at TIMESTAMP
+    ends_at TIMESTAMP,
+    event_details JSONB
 );
 
 -- participantテーブル
