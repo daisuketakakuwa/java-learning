@@ -33,7 +33,26 @@
         </collection>
     </resultMap>
 
-
+    <insert id="createEvent" parameterType="jp.ats.kotlinlearning.model.Event">
+        <!-- insert/update 時に、テーブルの先頭以外の列でキーの自動生成がされている場合に指定が必要 -->
+        <!-- useGeneratedKeys="true" -->
+        <!-- keyColumn="id" -->
+        <!-- keyProperty="id"-->
+        INSERT INTO event (
+            organizer_id,
+            event_name,
+            starts_at,
+            ends_at,
+            event_details
+        ) VALUES (
+            <!-- xxxx.property のように書く必要はない -->
+            #{organizerId},
+            #{eventName},
+            #{startsAt},
+            #{endsAt},
+            #{eventDetails,typeHandler=jp.ats.kotlinlearning.repository.JSONBTypeHandler}
+        )
+    </insert>
 
     <select id="findEvents" resultType="jp.ats.kotlinlearning.model.Event" >
         SELECT * FROM event

@@ -40,6 +40,7 @@ class EventServiceTest {
                 "event",
                 "organizer"
             )
+            // データ投入
             insertInto("organizer") {
                 mappedValues(
                     "organization_name" to "組織1"

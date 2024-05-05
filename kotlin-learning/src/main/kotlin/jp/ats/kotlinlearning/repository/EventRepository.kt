@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository
 @Repository
 interface EventRepository {
 
+    fun createEvent(model: Event)
+
     fun findEvents(): List<Event>
 
     fun findEventById(@Param("id") id: Int): Event
