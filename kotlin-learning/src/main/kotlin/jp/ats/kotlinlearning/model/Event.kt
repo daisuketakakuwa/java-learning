@@ -1,34 +1,29 @@
 package jp.ats.kotlinlearning.model
 
+import jp.ats.kotlinlearning.annotation.NoArgsConstructor
+import org.apache.ibatis.annotations.AutomapConstructor
 import java.time.LocalDateTime
 
+@NoArgsConstructor
 data class Event(
     val id: Long?, // BigSerialだからLong
     val organizerId: Int, // SerialだからInt
-    val eventName: String,
-    val startsAt: LocalDateTime,
+    val eventName: String = "",
+    val startsAt: LocalDateTime?,
     val endsAt: LocalDateTime,
     val eventDetails: EventDetails?
 )
 
-data class EventWithParticipants(
+@NoArgsConstructor
+data class EventWithParticipants @AutomapConstructor constructor(
     val id: Long?, // BigSerialだからLong
-    val eventName: String,
+    val eventName: String?,
     val startsAt: LocalDateTime?,
     val endsAt: LocalDateTime?,
     val eventDetails: EventDetails?,
     val organizer: Organizer?,
     val participants: List<Participant>
-) {
-    // MyBatisは空のコンストラクタを利用してインスタンス生成するので定義必須
-    constructor() : this(
-        1L,
-        "",
-        null,null,null,null,
-        // mutableなListでないとエラーとなる
-        mutableListOf()
-    )
-}
+)
 
 data class EventCreateRequest(
     val organizerId: Int, // SerialだからInt
@@ -38,6 +33,7 @@ data class EventCreateRequest(
     val eventDetails: String?
 ) {
     // MyBatisは空のコンストラクタを利用してインスタンス生成するので定義必須
+    // → noargsプラグインで @NoArgsConstructorを使えばOK👍
     constructor() : this(
         0,
         "",
