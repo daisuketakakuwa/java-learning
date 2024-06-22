@@ -8,9 +8,9 @@ import java.time.LocalDateTime
 data class Event(
     val id: Long?, // BigSerialだからLong
     val organizerId: Int, // SerialだからInt
-    val eventName: String = "",
+    val eventName: String?,
     val startsAt: LocalDateTime?,
-    val endsAt: LocalDateTime,
+    val endsAt: LocalDateTime?,
     val eventDetails: EventDetails?
 )
 

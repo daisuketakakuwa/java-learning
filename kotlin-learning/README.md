@@ -1,5 +1,39 @@
 # Learn kotlin....
 
+## KotlinをGradleで扱う
+- 2024/06/22時点で、最新バージョンは2.0.0 ([what is the current version of Kotlin?](https://kotlinlang.org/docs/faq.html#what-is-the-current-version-of-kotlin))
+- 標準ライブラリ(kotlin-stdlib)は1.4.0から[自動で追加されるので定義不要](https://kotlinlang.org/docs/whatsnew14.html#dependency-on-the-standard-library-added-by-default)。
+- KotlinではJVMバージョンを自由に指定可能👍（[Kotlin lets you choose the version of JVM for execution.](https://kotlinlang.org/docs/faq.html#which-versions-of-jvm-does-kotlin-target)）
+- 何も指定しないとJava8 compatibleなバイトコードを出力する👍（[By default, the Kotlin/JVM compiler produces Java 8 compatible bytecode](https://kotlinlang.org/docs/faq.html#which-versions-of-jvm-does-kotlin-targe)）
+- 明示的に指定したい場合は、JavaとKotlinの両方のJVMコンパイルに設定をする必要がある👍
+- Gradleにて、KotlinコードをJVMターゲットにコンパイルするためには`org.jetbrains.kotlin.jvm`プラグインをインストールする。
+  - プラグインをインストールすると、Gradleタスク(`compileJava`/`compileTestJava`/`compileKotlin`/`compileTestKotlin`)が追加される。（`gradlew tasks --all`コマンドの`Other Tasks`に追加される）
+  - そう、KotlinはもちろんJavaもコンパイル対象となる。
+  - Gradleのカスタムタスクで上記タスクをまとめている。 
+    - `JavaCompile` -> `compileJava` ＋ `compileTestJava`
+    - `KotlinCompile` -> `compileKotlin` ＋ `compileTestKotlin`
+- 以下、KotlinとJavaを1.8でコンパイルされるよう明示的に指定する例
+```gradle
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "2.0.0"
+}
+
+// Javaファイルのコンパイル
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+// tasks.withType(JavaCompile)  でも指定可能👍
+
+// Kotlinファイルのコンパイル
+tasks.withType(KotlinCompile) {
+	kotlinOptions {
+        jvmTarget = "1.8"
+	}
+}
+```
+
+
 ## How to run on local
 
 ```
@@ -13,7 +47,7 @@ gradlew bootRun
 psql -p 5435 -U postgres -d kotlinDb -f ./local/import-data.sql
 ```
 
-# MyBatis
+## MyBatis
 - [MyBatis-Spring-Boot-Starter](https://mybatis.org/spring-boot-starter/mybatis-spring-boot-autoconfigure/)を利用する。
 - `DataSource`,`SqlSessionFactory`周りのboilertemplateを書かずに済む！
 - 用意するのは Mapper(XML), Mapper(Java/IF) の２つ
