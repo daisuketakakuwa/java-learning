@@ -219,7 +219,6 @@ arrayOf(*nums1, *nums2).forEach{ num -> println(num)}
 
 ### リスト
 - mutableListOfでもarrayListOfでも動作あまり変わらない。
-- 
 
 ```kt
 // listOf -> 不変(Immutable)なリスト ※JavaだとList.of
@@ -266,7 +265,6 @@ for ((key, value) in map2) {
 
 
 ```
-
 
 ## コレクション関数
 
@@ -438,7 +436,7 @@ fun main() {
 
 ```
 
-### groupBy - SQLのGROPUBY的な -> 戻り値はMap
+### groupBy - SQLのGROUPBY的な -> 戻り値はMap
 
 ```kt
 data class Policy(val policyNo: String, val type: Int)
@@ -538,6 +536,120 @@ fun main() {
         else -> "user is valid"
     }
     println(authResult)
+}
+```
+
+## シーケンス
+
+### 特徴1: 値を無限に生成できる
+
+無限シーケンス<br>
+・初期値(seed)を決めて、nextFunction指定で前の値を踏まえて次の値を生成する。<br>
+・**nextFunctionの中でnullを返せば意図的に値生成を中断することもできる👍**
+
+有限シーケンス<br>
+・Listをシーケンスに変換したときなどはこれ。<br>
+・特徴2の遅延評価を適用したいときにはこれに有限シーケンスを生成することになるのかな。
+
+### 特徴2: 遅延評価(lazy evaluation)
+
+**中間コレクションが生成されなくなるので、** 場合によってはパフォーマンス向上が見込まされる👍
+
+リストは即時評価(eager evaluation)
+```kt
+fun main() {
+    val numbers = listOf(1, 2, 3, 4, 5)
+
+    val filtered = numbers
+        .map { it * 2 } // mapを適用した中間シーケンスがメモリ上に生成
+        .filter { it > 5 } // filterを適用した中間シーケンスをメモリ上に生成
+        .toList()
+
+    println(filtered) // 出力: [6, 8, 10]
+}
+```
+
+シーケンスは 遅延評価(lazy evaluation)
+```kt
+fun main() {
+    val numbers = listOf(1, 2, 3, 4, 5)
+
+    val filtered = numbers.asSequence() // Sequenceに変換
+        .map { it * 2 } // 遅延評価のmap
+        .filter { it > 5 } // 遅延評価のfilter
+        .toList() // ここで一気にmapとfilterを適用するので、不要な中間リストは生成されない
+
+    println(filtered) // 出力: [6, 8, 10]
+}
+```
+
+### 有限シーケンスと無限シーケンス
+
+使い方
+
+毎回のAPIコール結果を踏まえて、次の処理を続けるかどうかを決める
+ていう「数が決まっていない繰り返し処理」にぴったりなわけね。
+
+```kt
+import java.time.format.DateTimeFormatter
+import java.time.LocalDateTime
+import java.time.Duration
+import kotlin.random.Random
+
+fun main() {
+    val data = fetchData()
+    println("取得データ: $data")
+}
+
+fun fetchData(): Int {
+    
+    val mockAPI = MockAPI(true)
+    
+ 	// 前の値を踏まえて次の値を生成する -> シーケンス👍 
+ 	// ・特定条件で値生成を終わる = 繰り返し処理が終わる
+    generateSequence(
+    	seed = 1000L, // 最初のリトライ待機時間
+        nextFunction = { prev -> 
+            if (mockAPI.canRetry) {
+                // リトライOKの場合、待機時間を取得
+                mockAPI.nextRetryTimeout()
+            } else {
+                // リトライNGの場合、nullを生成して処理を中断する。
+                null
+            }
+        }
+    ).forEachIndexed{ i, nextRetryTimeout -> 
+    	// API実行
+        val responseStatus = mockAPI.executeAPI(i + 1)
+        println("API実行 ${i+1}回目 Status: $responseStatus")
+        // OKであれば終了
+        if (200 <= responseStatus && responseStatus < 300) {
+            println("API実行成功: $responseStatus")
+            return responseStatus
+        }
+        // NGであれば待機して次の処理へ
+        try {
+            val before =  LocalDateTime.now();
+            Thread.sleep(nextRetryTimeout)
+            val after =  LocalDateTime.now();
+            println("待機時間 ${Duration.between(before, after).seconds}秒")
+        } catch (ex: Exception) {
+            Thread.currentThread().interrupt()
+        }
+    }
+    throw RuntimeException("リトライ処理を実施しましたがNGでした。")
+}
+
+class MockAPI(
+	var canRetry: Boolean
+) {
+    fun executeAPI(count: Int): Int {
+		this.canRetry = count < 3 // リトライ処理は2回まで
+        return Random.nextInt(200, 500)
+    }
+    fun nextRetryTimeout(): Long {
+        return Random.nextLong(1000, 3000)
+    }
 }
 ```
 
@@ -1003,7 +1115,7 @@ data class Person(val name: String? = null, val age: String? = null) {
 
 ```kt
 open class BaseApiRequest(
-	val url: String,
+    val url: String,
     val method: String,
     val token: String,
 )
