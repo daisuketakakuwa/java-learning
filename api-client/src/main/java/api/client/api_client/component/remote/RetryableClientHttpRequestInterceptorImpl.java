@@ -1,4 +1,4 @@
-package api.client.api_client.repository.remote;
+package api.client.api_client.component.remote;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
@@ -48,6 +48,7 @@ public class RetryableClientHttpRequestInterceptorImpl implements ClientHttpRequ
         // 6. リトライ可能であればリトライする(4の結果に依存する)
 
         BackOffExecution backOffexecution = backOff.start();
+        int count = 1;
         while (true) {
             // リトライOKの場合、待機時間(ミリ秒)
             // リトライNGの場合、BackOffExecution.STOP
@@ -61,26 +62,31 @@ public class RetryableClientHttpRequestInterceptorImpl implements ClientHttpRequ
                 boolean isRetryableResponseStatus = RETRYABLE_ERROR_RESPONSE_STATUSES
                         .contains(response.getStatusCode().value());
                 if (isOK || !isRetryableResponseStatus) {
+                    LOGGER.info("レスポンス情報: " + response);
                     return response;
                 }
                 // ここまで通過したらリトライ可否確認へ移動する。
             } catch (Exception ex) {
+                LOGGER.warn("外部APIコール時にエラーが検知されました: " + ex.getMessage());
                 boolean isRetryableIOException = ex instanceof ResourceAccessException;
                 boolean isRetryableTimeoutException = ex instanceof SocketTimeoutException;
-                if (!isRetryableIOException || !isRetryableTimeoutException) {
-                    throw new RuntimeException("リトライ不可能なシステムエラーが発生しました。", ex);
+                if (!isRetryableIOException && !isRetryableTimeoutException) {
+                    LOGGER.error("リトライ不可能なシステムエラーが発生しました。 " + ex.getMessage());
+                    throw new RuntimeException(ex);
                 }
                 // ここまで通過したらリトライ可否確認へ移動する。
             } finally {
                 // レスポンスを返却しなかった場合にここにたどり着く。
                 // リトライ可能であれば 後続の待機処理を経て次ループへ
-                if (nextBackOff != BackOffExecution.STOP) {
-                    throw new RuntimeException("リトライ上限回数を超過したため処理を中断します。");
+                if (nextBackOff == BackOffExecution.STOP) {
+                    LOGGER.error("リトライ上限回数を超過したため処理を中断します。 ");
+                    throw new RuntimeException();
                 }
             }
 
             // 待機処理
-            LOGGER.info("Wait interval ({})", nextBackOff);
+            LOGGER.info("{}回目のリトライ処理を行います。({}ミリ秒待機)", count, nextBackOff);
+            count = count + 1;
             try {
                 Thread.sleep(nextBackOff);
             } catch (InterruptedException ie) {

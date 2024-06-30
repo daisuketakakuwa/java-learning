@@ -1,0 +1,12 @@
+{
+  "name": "mock-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "json-server --watch db.json -p 9999 --delay 1000"
+  },
+  "devDependencies": {
+    "json-server": "^0.17.4"
+  }
+}
