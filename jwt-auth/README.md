@@ -59,10 +59,15 @@ eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3QifQ.eyJzdWIiOiIxMjM0NTY3ODkwI
 </dependency>
 ```
 
-- `buildAuthentication関数` -> SecurityContext に保存する Authentication 生成
-- `validateToken関数` -> Token が expired してないかチェック。
+- `JwtTokenProvider`クラス
+    - `validateToken関数`
+        - Request内のJWT文字列取得 → JWTオブジェクトへ変換
+        - JWT有効期限をチェックする
+    - `buildAuthentication関数`
+        - Request内のJWT文字列取得 → JWTオブジェクトへ変換
+        - JWTオブジェクトから、SecurityContext に保存する Authentication 生成
 
-````java
+```java
 package jp.english.hub.englishhubback.domain.jwt;
 
 import java.security.Key;
@@ -133,7 +138,7 @@ public class JwtTokenProvider implements TokenProvider {
     }
 
 }
-``
+```
 
 ```java
 package jp.english.hub.englishhubback.domain.jwt;
