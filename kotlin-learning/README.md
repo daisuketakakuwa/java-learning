@@ -85,6 +85,33 @@ data class EventWithParticipants(
     )
 }
 ```
+#### [@NoArgsConstructorプラグイン](https://kotlinlang.org/docs/no-arg-plugin.html#command-line-compiler)で空コンストラクタを自動生成
+```gradle
+# build.gradle
+noArg {
+	annotation("jp.ats.kotlinlearning.annotation.NoArgsConstructor")
+}
+```
+```kt
+package jp.ats.kotlinlearning.annotation
+
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.SOURCE)
+annotation class NoArgsConstructor
+```
+↓これで、上記で定義したような無引数コンストラクタを自動生成する。
+```kt
+@NoArgsConstructor
+data class EventWithParticipants(
+    val id: Long,
+    val eventName: String,
+    val startsAt: LocalDateTime?,
+    val endsAt: LocalDateTime?,
+    val organizer: Organizer?,
+    val participants: List<Participant>
+)
+```
+
 
 ### TypeHandler
 - Java型 ⇔ DB型　のマッピング/変換処理を担う。
@@ -385,16 +412,56 @@ println(sortedByValueDesc)
 ```
 
 ### リストのflatten
+- List<List\<T>> → List\<T> へ変換（子要素のList\<T>を展開してくれる）
+- 展開するのは子要素のみで、孫要素もListで展開したかったら＋でflatten()する。
 
 ```kt
-val days = listOf("MON","TUE","WED","THU","FRI","SAT","SUN")
-val months = listOf("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+println(
+    listOf(
+        listOf("Error1", "Error3"),
+        listOf("Error3", "Error4"),
+        listOf(
+            listOf("Error5", "Error6")
+        ).flatten() // 孫要素に対しては個別で展開
+    ).flatten()
+)
 
-val allLists: List<List<String>> = listOf(days, months)
-allLists.forEach{ println(it) } // [MON,--,SUN] と [Jan,--,Dec] で表示
-// flattern -> nestしてるListを平坦にする
-allLists.flatten().forEach{ println(it) } // MON,--,SUN,Jan,--,Dec で表示
+// 出力: [Error1, Error3, Error3, Error4, Error5, Error6]
 ```
+
+### Map構築にflattenを用いる
+こんなことせずシンプルにMapに追加していくやり方もいい気がするが、１つの方法として...という感じ。
+```kt
+fun main() {
+    val requestInfoMap = mutableMapOf(
+    	"request_id" to "897gfda8sr32",
+        "request_url" to "/api/internal/info"
+    )
+    
+    val validationErrorMap = mutableMapOf(
+        "name" to "100文字以内にしてください。",
+        "password" to "特殊文字は使用不可です。"
+    )
+    
+    // List<List<Pair>> を作成 →flatten()→ List<Pair> →toMap()→ Map
+    val responseMap = listOf(
+        requestInfoMap.toList(),
+        listOf(Pair("validationErrors", validationErrorMap))
+    ).flatten().toMap()
+    
+    println(responseMap)
+    // output: 
+    // {
+    // 		request_id=897gfda8sr32,
+    // 		request_url=/api/internal/info,
+    // 		validationErrors={
+    // 			name=100文字以内にしてください。,
+    // 			password=特殊文字は使用不可です
+    // 		}
+    // 	}
+}
+```
+
 
 ### flatMap
 
