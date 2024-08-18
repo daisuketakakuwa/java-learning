@@ -462,6 +462,8 @@ fun main() {
 }
 ```
 
+<img width="700px" src="https://github.com/user-attachments/assets/0a627674-b105-4db7-abc3-638c7301184e"/>
+
 
 ### flatMap
 
