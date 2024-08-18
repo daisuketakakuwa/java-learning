@@ -1,1 +1,13 @@
 # java-learning
+
+|プロジェクト|内容|
+|----|----|
+|api-client|RestTemplateのリトライ処理実装|
+|hikari-cp|HikariCP検証|
+|jwt-auth|SpringBootでJWT検証するやり方<br>・パターン1(`com.auth0.java-jwt`,`com.auth0.jwks-rsa`)<br>・パターン2(`io.jsonwebtoken.jjwt-api`)|
+|kotlin-learning|・Kotlin<br>・Gradle<br>・MyBatis<br>・テスト実装(`com.ninja-squad.DbSetup`)|
+|policy-api|・SpringBootApp → Logstash → Elasticsearch/Kibana連携<br>・SpringDataJpa/Specification実装<br>・テスト実装(RepositoryIntegration/ServiceUT/ControllerIntegration)|
+|username-password-auth|SpringSecurity勉強<br>・UsernamePasswordAuthenticationFilterでPOST /login<br>・AuthenticationManager\<IF\> → ProviderManager\<Impl\><br>・AuthenticationProvider\<IF\> → DaoAuthenticationProvider等|
+|validator<br> - javax-validator|`spring-boot-starter-validation(jakarta.validation)`検証|
+|validator<br> - custom-validator|・Kotlin × throwIfNotEmpty × BusinessException<br>・MultipartFileアップロード with POSTリクエスト|
+
