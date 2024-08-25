@@ -1,0 +1,64 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+buildscript {
+	ext {
+		kotlinVersion = '1.9.23'
+	}
+}
+
+// 新しいプラグイン記法/推奨： pluginのバージョンを明示的に指定できる
+plugins {
+	// Kotlin/Javaをコンパイルするためのプラグイン(JVMターゲットversion指定!)
+	id 'org.jetbrains.kotlin.jvm' version "${kotlinVersion}"
+	// Kotlin特有のデータクラスや拡張関数を Springのコンポーネントとして識別させる。
+	// KotlinとSpring Bootの統合するときに よしなに依存性解決
+	id 'org.jetbrains.kotlin.plugin.spring' version "${kotlinVersion}"
+	// mybatis用に空コンストラクタをData classにて自動生成する
+	id "org.jetbrains.kotlin.plugin.noarg" version "${kotlinVersion}"
+
+	// SpringBoot関連ライブラリのバージョン指定不要となる。
+	// bootRun, bootJar, bootWarタスクが追加される。
+	id 'org.springframework.boot' version '3.2.4'
+	id 'io.spring.dependency-management' version '1.1.4'
+}
+
+group = 'validator.customvalidator'
+version = '1.0.0'
+
+// Java/Kotlinコンパイル設定
+java {
+	sourceCompatibility = '17'
+}
+tasks.withType(KotlinCompile) {
+	kotlinOptions {
+		freeCompilerArgs += '-Xjsr305=strict'
+		jvmTarget = '17'
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// kotlin
+	implementation 'org.jetbrains.kotlin:kotlin-reflect'
+	// spring related
+	// -- バージョン指定不要 by org.jetbrains.kotlin.plugin.springプラグイン
+	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	// test-related
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.25.3'
+}
+
+// 実行可能JARを作成するタスク
+bootJar {
+	archiveFileName = "customer-validator-api.jar"
+}
+
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

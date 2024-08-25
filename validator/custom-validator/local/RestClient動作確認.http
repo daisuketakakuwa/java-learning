@@ -1,0 +1,8 @@
+POST http://localhost:8080/clients
+Content-Type: application/json
+Accept: application/json
+
+{
+    "name": "クライアントA",
+    "email": "hoge@hoge.com"
+}
